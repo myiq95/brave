@@ -61,14 +61,19 @@
         <p class="hero-sub">텍스트·마크다운·문서·PDF·EPUB까지,<br/>종이책의 감성을 그대로.</p>
       </div>
 
-      <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="파일 불러오기">
+      <label class="dropzone" id="dropzone" for="fileInput" role="button" aria-label="파일 불러오기" style="cursor:pointer;display:block;">
         <div class="dz-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
         </div>
         <p class="dz-title">파일을 드롭하거나 클릭하여 불러오세요</p>
         <p class="dz-formats">TXT · MD · DOCX · PDF · EPUB</p>
-        <input type="file" id="fileInput" accept=".txt,.md,.markdown,.docx,.pdf,.epub" multiple hidden />
+      </label>
+      <input type="file" id="fileInput" accept=".txt,.md,.markdown,.docx,.pdf,.epub,.txt,.md" multiple style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px;" />
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button id="btnPickFile" style="padding:10px 18px;border-radius:10px;border:1.5px solid #a16b3f;background:#fff;color:#a16b3f;font-weight:600;">📁 파일 선택 (iPhone용)</button>
+        <button id="btnLoadSample" style="padding:10px 18px;border-radius:10px;border:1.5px solid #ccc;background:#f3efe7;color:#666;">📖 샘플 책 열기</button>
       </div>
+      <div id="fileDebug" style="margin-top:10px;font-size:12px;color:#666;text-align:center;"></div>
 
       <div class="library-shelf" id="shelf"></div>
     </div>
@@ -578,5 +583,47 @@ if ('serviceWorker' in navigator) {
 })();
 
 
-</script><script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}</script></body>
+</script><script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}</script>
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+  const fileInput = document.getElementById('fileInput');
+  const debug = document.getElementById('fileDebug');
+  const btnPick = document.getElementById('btnPickFile');
+  const btnSample = document.getElementById('btnLoadSample');
+  
+  if(btnPick && fileInput){
+    btnPick.addEventListener('click', (e)=>{
+      e.preventDefault();
+      debug.textContent='파일 선택창 여는 중...';
+      fileInput.click();
+    });
+  }
+  
+  if(fileInput){
+    fileInput.addEventListener('change', ()=>{
+      if(fileInput.files && fileInput.files.length>0){
+        debug.textContent = '선택됨: ' + fileInput.files[0].name + ' (' + fileInput.files.length + '개)';
+      } else {
+        debug.textContent = '파일 선택 취소됨';
+      }
+    });
+  }
+  
+  if(btnSample){
+    btnSample.addEventListener('click', ()=>{
+      const sampleText = `모험가 홈즈는 미스터리한 사건을 해결하기 위해 나섰다. 런던의 안개 낀 거리를 걸으며 그는 단서를 찾았다. 그의 날카로운 관찰력은 작은 흔적도 놓치지 않았다. 왓슨은 그의 곁에서 조용히 기록했다. 두 사람은 함께 진실을 향해 나아갔다. 마침내 모든 퍼즐이 맞춰졌다. 범인은 바로 그곳에 있었다. 홈즈의 추리가 빛을 발하는 순간이었다.\n\n이 책은 테스트를 위한 샘플입니다. 파일 가져오기가 안 될 때 이 샘플로 TTS 소리 테스트를 해보세요.`;
+      // create fake book
+      const blob = new Blob([sampleText], {type:'text/plain'});
+      const file = new File([blob], 'sample.txt', {type:'text/plain'});
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInput.files = dt.files;
+      fileInput.dispatchEvent(new Event('change', {bubbles:true}));
+      debug.textContent='샘플 책 로드됨 - 바로 읽기 가능';
+    });
+  }
+});
+</script>
+
+</body>
 </html>
