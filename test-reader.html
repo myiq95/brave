@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TTS 하이라이트 테스트</title>
+<style>body{font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f3efe7} #content{line-height:2;font-size:18px;margin:20px 0} .highlight{background:#ffd54f;padding:2px 4px;border-radius:4px} button{padding:12px 20px;font-size:16px;margin:5px} #log{margin-top:20px;font-size:12px;white-space:pre-wrap;background:#111;color:#0f0;padding:10px}</style>
+</head><body>
+<h2>📖 TTS 테스트 리더</h2>
+<button id="play">▶ 재생</button><button id="stop">⏹ 정지</button>
+<div id="content">모험가 홈즈는 미스터리한 사건을 해결하기 위해 나섰다. 런던의 안개 낀 거리를 걸으며 그는 단서를 찾았다. 그의 날카로운 관찰력은 작은 흔적도 놓치지 않았다. 왓슨은 그의 곁에서 조용히 기록했다. 두 사람은 함께 진실을 향해 나아갔다. 마침내 모든 퍼즐이 맞춰졌다. 범인은 바로 그곳에 있었다. 홈즈의 추리가 빛을 발하는 순간이었다.</div>
+<div id="log"></div>
+<script>
+const contentEl=document.getElementById('content'); const logEl=document.getElementById('log');
+const originalText=contentEl.textContent;
+let sentences=[]; let idx=0; let playing=false;
+function log(m){ logEl.textContent+=m+'\n'; }
+function chunk(){ sentences=originalText.split(/(?<=[.!?])\s+/); }
+function highlight(n){
+  contentEl.innerHTML='';
+  sentences.forEach((s,i)=>{ const span=document.createElement('span'); span.textContent=s+' '; if(i===n) span.className='highlight'; contentEl.appendChild(span); });
+  const hl=document.querySelector('.highlight'); if(hl) hl.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function speak(text){ return new Promise(res=>{ const u=new SpeechSynthesisUtterance(text); u.lang='ko-KR'; u.onend=()=>{ log('완료: '+text.slice(0,20)); res(); }; u.onerror=()=>res(); speechSynthesis.cancel(); speechSynthesis.speak(u); }); }
+async function play(){ playing=true; for(let i=idx;i<sentences.length;i++){ if(!playing) break; idx=i; highlight(i); log('읽는 중: '+sentences[i].slice(0,20)); await speak(sentences[i]); } playing=false; log('전체 완료'); }
+document.getElementById('play').onclick=()=>{ if(!playing){ chunk(); play(); } };
+document.getElementById('stop').onclick=()=>{ playing=false; speechSynthesis.cancel(); idx=0; log('정지'); };
+chunk(); log('준비 완료 - 재생 누르세요');
+</script>
+</body></html>

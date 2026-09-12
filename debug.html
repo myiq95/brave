@@ -1,73 +1,10 @@
-<!DOCTYPE html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>소리 진단</title>
-<style>body{font-family:sans-serif;padding:20px}button{padding:14px 20px;margin:8px 0;width:100%;font-size:16px} #log{background:#111;color:#0f0;padding:10px;white-space:pre-wrap;height:200px;overflow:auto}</style>
-</head><body>
-<h2>🔊 Brave 소리 진단</h2>
-<button id="b1">1. 비프음 (Web Audio) 테스트</button>
-<button id="b2">2. 네이티브 TTS 테스트 (speechSynthesis)</button>
-<button id="b3">3. Google MP3 TTS 테스트 (오디오 태그)</button>
-<button id="b4">4. Edge TTS WebSocket 테스트</button>
-<audio id="a" controls playsinline style="width:100%;margin-top:10px"></audio>
-<div id="log"></div>
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>진단</title>
+<style>body{font-family:sans-serif;padding:20px} button{padding:12px;width:100%;margin:6px 0} #log{background:#111;color:#0f0;padding:10px;white-space:pre-wrap}</style>
+</head><body><h2>🔊 진단</h2>
+<button id="b1">1. 비프음</button><button id="b2">2. 네이티브 TTS</button>
+<audio id="a" controls style="width:100%"></audio><div id="log"></div>
 <script>
-const logEl=document.getElementById('log');
-function log(m){ logEl.textContent+=m+'\n'; console.log(m); }
-log('Brave: '+navigator.userAgent);
-log('brave obj: '+(navigator.brave?'yes':'no'));
-
-document.getElementById('b1').onclick=async()=>{
-  log('--- 비프음 테스트 ---');
-  try{
-    const ctx=new (window.AudioContext||window.webkitAudioContext)();
-    await ctx.resume();
-    const osc=ctx.createOscillator(); osc.type='sine'; osc.frequency.value=440;
-    osc.connect(ctx.destination); osc.start(); setTimeout(()=>osc.stop(),800);
-    log('비프음 재생 시도 - 소리 들리면 Web Audio는 OK');
-  }catch(e){ log('비프음 실패: '+e); }
-};
-
-document.getElementById('b2').onclick=()=>{
-  log('--- 네이티브 TTS 테스트 ---');
-  try{
-    const u=new SpeechSynthesisUtterance('안녕하세요. 네이티브 TTS 테스트입니다.');
-    u.lang='ko-KR'; u.rate=1;
-    u.onstart=()=>log('TTS 시작');
-    u.onend=()=>log('TTS 끝');
-    u.onerror=(e)=>log('TTS 에러: '+e.error);
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
-    log('speak 호출함. 목소리 수: '+speechSynthesis.getVoices().length);
-  }catch(e){ log('네이티브 실패: '+e); }
-};
-
-document.getElementById('b3').onclick=async()=>{
-  log('--- Google MP3 테스트 ---');
-  const a=document.getElementById('a');
-  try{
-    const q=encodeURIComponent('안녕하세요 구글 TTS 테스트입니다');
-    const url=`https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=ko&client=tw-ob&q=${q}`;
-    log('fetch: '+url);
-    const r=await fetch(url);
-    log('fetch 상태: '+r.status);
-    const blob=await r.blob();
-    log('blob 크기: '+blob.size);
-    const u=URL.createObjectURL(blob);
-    a.src=u; a.volume=1; a.muted=false;
-    await a.play();
-    log('audio.play 성공 - 소리 들려야 함');
-  }catch(e){ log('Google MP3 실패: '+e); }
-};
-
-document.getElementById('b4').onclick=()=>{
-  log('--- Edge WebSocket 테스트 ---');
-  try{
-    const ws=new WebSocket('wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4');
-    ws.onopen=()=>log('Edge WS 연결 성공');
-    ws.onerror=(e)=>log('Edge WS 에러');
-    ws.onclose=()=>log('Edge WS 닫힘');
-    setTimeout(()=>{ try{ws.close()}catch{} },3000);
-  }catch(e){ log('Edge WS 실패: '+e); }
-};
-</script>
-</body></html>
+const logEl=document.getElementById('log'); function log(m){ logEl.textContent+=m+'\n'; }
+document.getElementById('b1').onclick=async()=>{ const ctx=new (window.AudioContext||window.webkitAudioContext)(); await ctx.resume(); const o=ctx.createOscillator(); o.connect(ctx.destination); o.start(); setTimeout(()=>o.stop(),500); log('비프음'); };
+document.getElementById('b2').onclick=()=>{ const u=new SpeechSynthesisUtterance('안녕하세요 테스트입니다'); u.lang='ko-KR'; u.onstart=()=>log('TTS 시작'); u.onend=()=>log('TTS 끝'); speechSynthesis.speak(u); log('호출'); };
+</script></body></html>
