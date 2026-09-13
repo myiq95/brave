@@ -1,252 +1,105 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>서재 — 파일 읽기</title>
-<link rel="stylesheet" href="styles.css">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-180.png">
-<style>
-body{font-family:'Pretendard',sans-serif;background:#f3efe7;margin:0}
-.topbar{position:sticky;top:0;z-index:10;background:#f3efe7cc;backdrop-filter:blur(10px);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e8ddd0}
-.book-wrap{max-width:700px;margin:0 auto;padding:20px}
-#bookFlow{line-height:2;font-size:18px;white-space:pre-wrap;word-break:break-word}
-#bookFlow p{margin:0 0 1.2em 0}
-.tts-highlight{background:#ffeb3b !important;border-radius:4px;padding:2px 4px;transition:background 0.3s}
-.controls{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 20px;border-radius:30px;display:flex;gap:12px;align-items:center;z-index:20}
-.controls button{background:#fff;color:#111;border:0;padding:8px 16px;border-radius:20px;font-weight:600;cursor:pointer}
-.dropzone{border:2px dashed #c9b8a0;border-radius:16px;padding:30px;text-align:center;background:#fff8ef;cursor:pointer;display:block;margin:20px 0}
-.dropzone:hover{border-color:#a16b3f}
-.file-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}
-.file-btns button{padding:12px 20px;border-radius:12px;border:1.5px solid #a16b3f;background:#fff;color:#a16b3f;font-weight:700;cursor:pointer;font-size:15px}
-.file-btns button.secondary{border-color:#ccc;color:#666;background:#f3efe7}
-#log{font-size:12px;color:#666;margin-top:10px;text-align:center;white-space:pre-wrap}
-</style>
-</head>
-<body>
-<header class="topbar">
-  <div style="font-weight:700;">📚 서재</div>
-  <div style="display:flex;gap:8px;">
-    <button id="btnSample" class="secondary" style="padding:6px 12px;border-radius:8px;border:1px solid #ccc;background:#fff;">샘플 열기</button>
-    <button id="btnTts" style="padding:6px 14px;border-radius:8px;border:0;background:#a16b3f;color:#fff;font-weight:700;">🔊 읽어주기</button>
-  </div>
-</header>
-
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>서재 — 파일 읽기</title><link rel="stylesheet" href="styles.css"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><style>
+body{font-family:Pretendard,sans-serif;background:#f3efe7;margin:0}.topbar{position:sticky;top:0;z-index:10;background:#f3efe7cc;backdrop-filter:blur(10px);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e8ddd0}.book-wrap{max-width:700px;margin:0 auto;padding:20px}#bookFlow{line-height:2;font-size:18px;white-space:pre-wrap;word-break:break-word}#bookFlow p{margin:0 0 1.2em 0}.tts-highlight{background:#ffeb3b!important;border-radius:4px;padding:2px 4px}.controls{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 20px;border-radius:30px;display:flex;gap:12px;align-items:center;z-index:20}.controls button{background:#fff;color:#111;border:0;padding:8px 16px;border-radius:20px;font-weight:600;cursor:pointer}.dropzone{border:2px dashed #c9b8a0;border-radius:16px;padding:30px;text-align:center;background:#fff8ef;cursor:pointer;display:block;margin:20px 0}.file-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}.file-btns button{padding:12px 20px;border-radius:12px;border:1.5px solid #a16b3f;background:#fff;color:#a16b3f;font-weight:700;cursor:pointer;font-size:15px}.file-btns button.secondary{border-color:#ccc;color:#666;background:#f3efe7}#log{font-size:12px;color:#666;margin-top:10px;text-align:center;white-space:pre-wrap}
+</style></head><body>
+<header class="topbar"><div style="font-weight:700;">📚 서재</div><div style="display:flex;gap:8px;"><button id="btnSample" style="padding:6px 12px;border-radius:8px;border:1px solid #ccc;background:#fff;">샘플</button><button id="btnTts" style="padding:6px 14px;border-radius:8px;border:0;background:#a16b3f;color:#fff;font-weight:700;">🔊 읽어주기</button></div></header>
 <div class="book-wrap">
-  <div id="libraryView">
-    <h1 style="text-align:center;margin:20px 0 10px;">서재</h1>
-    <p style="text-align:center;color:#888;font-size:14px;">TXT · MD · PDF · EPUB · DOCX 지원</p>
-    
-    <label class="dropzone" for="fileInput">
-      <div style="font-size:40px;">⬆️</div>
-      <div style="font-weight:700;margin:10px 0;">파일을 드롭하거나 클릭하여 불러오세요</div>
-      <div style="font-size:12px;color:#999;">TXT · MD · DOCX · PDF · EPUB</div>
-    </label>
-    <input type="file" id="fileInput" accept=".txt,.md,.pdf,.epub,.docx,text/plain,application/pdf" multiple style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px;">
-    
-    <div class="file-btns">
-      <button id="btnPick">📁 파일 선택 (iPhone용)</button>
-      <button id="btnSample2" class="secondary">📖 샘플 책으로 테스트</button>
-    </div>
-    <div id="fileLog">파일을 선택하면 여기에 표시됩니다</div>
-  </div>
-
-  <div id="readerView" style="display:none;">
-    <div style="margin-bottom:12px;display:flex;gap:8px;">
-      <button id="btnBack" style="padding:8px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;">← 서재로</button>
-      <span id="progressText" style="margin-left:auto;font-size:13px;color:#888;line-height:34px;">0 / 0</span>
-    </div>
-    <div style="height:4px;background:#e8ddd0;border-radius:2px;margin-bottom:16px;"><div id="progressFill" style="height:100%;background:#a16b3f;width:0%;border-radius:2px;transition:width 0.3s"></div></div>
-    <div id="bookFlow"></div>
-  </div>
+<div id="libraryView"><h1 style="text-align:center;">서재</h1><p style="text-align:center;color:#888;font-size:14px;">TXT · MD · PDF · EPUB · DOCX</p>
+<label class="dropzone" for="fileInput"><div style="font-size:40px;">⬆️</div><div style="font-weight:700;margin:10px 0;">파일을 드롭하거나 클릭</div><div style="font-size:12px;color:#999;">TXT · MD · DOCX · PDF · EPUB</div></label>
+<input type="file" id="fileInput" accept=".txt,.md,.pdf,.epub,.docx,text/plain" multiple style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px;">
+<div class="file-btns"><button id="btnPick">📁 파일 선택 (iPhone용)</button><button id="btnSample2" class="secondary">📖 샘플 책</button></div>
+<div id="fileLog">파일을 선택하면 표시됩니다</div></div>
+<div id="readerView" style="display:none;"><div style="margin-bottom:12px;display:flex;gap:8px;"><button id="btnBack" style="padding:8px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;">← 서재</button><span id="progressText" style="margin-left:auto;font-size:13px;color:#888;line-height:34px;">0 / 0</span></div><div style="height:4px;background:#e8ddd0;border-radius:2px;margin-bottom:16px;"><div id="progressFill" style="height:100%;background:#a16b3f;width:0%;border-radius:2px;"></div></div><div id="bookFlow"></div></div>
 </div>
-
-<div class="controls" id="ttsControls" style="display:none;">
-  <button id="ttsPrev">⏮</button>
-  <button id="ttsPlay">▶</button>
-  <button id="ttsNext">⏭</button>
-  <button id="ttsStop" style="background:#ff6b6b;color:#fff;">⏹</button>
-</div>
-
+<div class="controls" id="ttsControls" style="display:none;"><button id="ttsPrev">⏮</button><button id="ttsPlay">▶</button><button id="ttsNext">⏭</button><button id="ttsStop" style="background:#ff6b6b;color:#fff;">⏹</button></div>
+<audio id="keepAlive" loop style="display:none"></audio>
 <script>
-let sentences=[];
-let idx=0;
-let playing=false;
-let audioCtx=null;
-
-function unlock(){
+let sentences=[],idx=0,playing=false;
+let audioCtx=null, silentNode=null, keepAudio=null, watchdog=null;
+function startKeepAlive(){
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
     audioCtx.resume();
+    if(!silentNode){
+      const buf=audioCtx.createBuffer(1, audioCtx.sampleRate*2, audioCtx.sampleRate);
+      const src=audioCtx.createBufferSource(); src.buffer=buf; src.loop=true;
+      const g=audioCtx.createGain(); g.gain.value=0.001;
+      src.connect(g); g.connect(audioCtx.destination); src.start(); silentNode=src;
+    }
   }catch{}
+  try{
+    if(!keepAudio){ keepAudio=document.getElementById('keepAlive'); keepAudio.volume=0.01; keepAudio.src='data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA=='; keepAudio.play().catch(()=>{}); }
+  }catch{}
+  if('mediaSession' in navigator){
+    try{
+      navigator.mediaSession.metadata=new MediaMetadata({title:'서재 - 읽는 중',artist:'홈즈',album:'프리미엄 독서'});
+      navigator.mediaSession.playbackState='playing';
+      navigator.mediaSession.setActionHandler('pause',()=>{ try{speechSynthesis.pause();}catch{} });
+      navigator.mediaSession.setActionHandler('play',()=>{ try{speechSynthesis.resume();}catch{}; startKeepAlive(); });
+      navigator.mediaSession.setActionHandler('nexttrack',()=>{ if(idx<sentences.length-1){ idx++; highlight(idx);} });
+      navigator.mediaSession.setActionHandler('previoustrack',()=>{ if(idx>0){ idx--; highlight(idx);} });
+    }catch{}
+  }
+  if(watchdog) clearInterval(watchdog);
+  watchdog=setInterval(()=>{
+    if(playing && speechSynthesis.speaking && !speechSynthesis.paused){
+      try{ speechSynthesis.pause(); speechSynthesis.resume(); }catch{}
+      if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+      if(keepAudio) keepAudio.play().catch(()=>{});
+    }
+  },8000);
 }
-
-function chunkText(text){
-  // 문장 단위로 나누기
-  const parts = text.split(/(?<=[.!?。\n])\s+/);
-  return parts.filter(p=>p.trim().length>2).map(p=>p.trim());
-}
-
+function chunkText(t){ return t.split(/(?<=[.!?。\n])\s+/).filter(p=>p.trim().length>2).map(p=>p.trim()); }
 function renderText(text){
-  const flow=document.getElementById('bookFlow');
   sentences=chunkText(text);
-  flow.innerHTML='';
-  sentences.forEach((s,i)=>{
-    const p=document.createElement('p');
-    p.textContent=s;
-    p.dataset.idx=i;
-    flow.appendChild(p);
-  });
+  const flow=document.getElementById('bookFlow'); flow.innerHTML='';
+  sentences.forEach((s,i)=>{ const p=document.createElement('p'); p.textContent=s; p.dataset.idx=i; flow.appendChild(p); });
   document.getElementById('libraryView').style.display='none';
   document.getElementById('readerView').style.display='block';
   document.getElementById('ttsControls').style.display='flex';
   document.getElementById('progressText').textContent=`0 / ${sentences.length}`;
   window.scrollTo(0,0);
-  log(`책 로드됨: ${sentences.length}문장`);
+  log(`책 로드됨: ${sentences.length}문장 - 🔊 눌러서 재생`);
 }
-
-function clearHighlight(){
-  document.querySelectorAll('.tts-highlight').forEach(e=>{
-    e.classList.remove('tts-highlight');
-    e.style.background='';
-  });
-}
-
+function clearHighlight(){ document.querySelectorAll('.tts-highlight').forEach(e=>{ e.classList.remove('tts-highlight'); e.style.background=''; }); }
 function highlight(n){
   clearHighlight();
   const flow=document.getElementById('bookFlow');
   const target=flow.querySelector(`[data-idx="${n}"]`);
-  if(target){
-    target.classList.add('tts-highlight');
-    target.style.background='#ffeb3b';
-    target.scrollIntoView({behavior:'smooth',block:'center'});
-  }
+  if(target){ target.classList.add('tts-highlight'); target.style.background='#ffeb3b'; target.scrollIntoView({behavior:'smooth',block:'center'}); }
   document.getElementById('progressFill').style.width=((n/sentences.length)*100)+'%';
   document.getElementById('progressText').textContent=`${n+1} / ${sentences.length}`;
+  if('mediaSession' in navigator){ try{ navigator.mediaSession.metadata=new MediaMetadata({title:target?target.textContent.slice(0,40):'읽는 중',artist:`${n+1} / ${sentences.length}`,album:'서재'});}catch{} }
 }
-
-function speak(text){
-  return new Promise(res=>{
-    speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    u.lang='ko-KR'; u.rate=1;
-    u.onend=()=>res();
-    u.onerror=()=>res();
-    speechSynthesis.speak(u);
-  });
-}
-
+function speak(text){ return new Promise(res=>{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='ko-KR'; u.rate=1; u.onend=()=>res(); u.onerror=()=>res(); speechSynthesis.speak(u); }); }
 async function play(){
-  unlock();
-  playing=true;
-  document.getElementById('ttsPlay').textContent='⏸';
+  startKeepAlive();
+  playing=true; document.getElementById('ttsPlay').textContent='⏸';
   for(let i=idx;i<sentences.length;i++){
     if(!playing) break;
-    idx=i;
-    highlight(i);
-    await speak(sentences[i]);
+    idx=i; highlight(i); await speak(sentences[i]);
   }
-  playing=false;
-  document.getElementById('ttsPlay').textContent='▶';
-  clearHighlight();
+  playing=false; document.getElementById('ttsPlay').textContent='▶'; clearHighlight();
 }
-
-function stop(){
-  playing=false;
-  speechSynthesis.cancel();
-  idx=0;
-  clearHighlight();
-  document.getElementById('ttsPlay').textContent='▶';
-  document.getElementById('progressFill').style.width='0%';
-}
-
-function log(m){
-  document.getElementById('fileLog').textContent=m;
-  console.log(m);
-}
-
+function stop(){ playing=false; speechSynthesis.cancel(); idx=0; clearHighlight(); document.getElementById('ttsPlay').textContent='▶'; document.getElementById('progressFill').style.width='0%'; if(watchdog) clearInterval(watchdog); }
+function log(m){ document.getElementById('fileLog').textContent=m; console.log(m); }
 async function handleFiles(files){
   if(!files||files.length===0){ log('파일 없음'); return; }
-  const file=files[0];
-  log(`읽는 중: ${file.name} (${Math.round(file.size/1024)}KB)`);
-  try{
-    let text='';
-    if(file.name.endsWith('.pdf')){
-      // PDF는 간단히 텍스트로 못 읽으니 안내
-      text = await file.text().catch(()=> '');
-      if(!text || text.length<10){
-        text = `PDF 파일 ${file.name}은 브라우저에서 직접 텍스트 추출이 어렵습니다. TXT 파일로 변환해서 올려주세요.\n\n샘플로 테스트하려면 샘플 책 버튼을 눌러보세요.`;
-      }
-    } else {
-      text = await file.text();
-    }
-    if(!text.trim()){ log('파일이 비어있습니다'); return; }
-    renderText(text);
-  }catch(e){
-    log('파일 읽기 실패: '+e.message);
-  }
+  const file=files[0]; log(`읽는 중: ${file.name}`); try{ const text=await file.text(); if(!text.trim()){ log('빈 파일'); return; } renderText(text);}catch(e){ log('실패: '+e.message); }
 }
-
-// Events
-document.getElementById('fileInput').addEventListener('change', (e)=>{
-  handleFiles(e.target.files);
-});
-
-document.getElementById('btnPick').addEventListener('click', (e)=>{
-  e.preventDefault();
-  document.getElementById('fileInput').click();
-});
-
+document.getElementById('fileInput').addEventListener('change', e=>handleFiles(e.target.files));
+document.getElementById('btnPick').addEventListener('click', e=>{ e.preventDefault(); document.getElementById('fileInput').click(); });
 document.getElementById('btnSample').addEventListener('click', loadSample);
 document.getElementById('btnSample2').addEventListener('click', loadSample);
-
-function loadSample(){
-  const sample = `모험가 홈즈는 미스터리한 사건을 해결하기 위해 나섰다. 런던의 안개 낀 거리를 걸으며 그는 단서를 찾았다. 그의 날카로운 관찰력은 작은 흔적도 놓치지 않았다. 왓슨은 그의 곁에서 조용히 기록했다. 두 사람은 함께 진실을 향해 나아갔다. 마침내 모든 퍼즐이 맞춰졌다. 범인은 바로 그곳에 있었다. 홈즈의 추리가 빛을 발하는 순간이었다.
-
-이 책은 TTS 테스트를 위한 샘플입니다. 파일 가져오기가 안 될 때 이 샘플로 소리와 하이라이트가 정상 작동하는지 확인할 수 있습니다. 
-
-두 번째 문단입니다. 하이라이트가 문장마다 노란색으로 이동하면서 읽어줍니다. 사파리와 Brave 모두에서 작동해야 정상입니다.
-
-세 번째 문단입니다. 파일 선택이 Brave에서 막혔을 때 이 샘플로 먼저 테스트해보세요.`;
-  renderText(sample);
-}
-
-document.getElementById('btnTts').addEventListener('click', ()=>{
-  if(playing) stop(); else { idx=0; play(); }
-});
-
-document.getElementById('ttsPlay').addEventListener('click', ()=>{
-  if(playing){ speechSynthesis.pause(); playing=false; document.getElementById('ttsPlay').textContent='▶'; }
-  else {
-    if(speechSynthesis.paused){ speechSynthesis.resume(); playing=true; document.getElementById('ttsPlay').textContent='⏸'; }
-    else play();
-  }
-});
-
+function loadSample(){ const sample=`모험가 홈즈는 미스터리한 사건을 해결하기 위해 나섰다. 런던의 안개 낀 거리를 걸으며 그는 단서를 찾았다. 그의 날카로운 관찰력은 작은 흔적도 놓치지 않았다. 왓슨은 그의 곁에서 조용히 기록했다. 두 사람은 함께 진실을 향해 나아갔다. 마침내 모든 퍼즐이 맞춰졌다. 범인은 바로 그곳에 있었다. 홈즈의 추리가 빛을 발하는 순간이었다.\n\n이 책은 백그라운드 테스트용 샘플입니다. 화면을 껐을 때 잠금화면에서 재생 컨트롤이 보여야 합니다.`; renderText(sample); }
+document.getElementById('btnTts').addEventListener('click', ()=>{ if(playing) stop(); else { idx=0; play(); } });
+document.getElementById('ttsPlay').addEventListener('click', ()=>{ if(playing){ try{speechSynthesis.pause();}catch{} playing=false; document.getElementById('ttsPlay').textContent='▶'; } else { if(speechSynthesis.paused){ try{speechSynthesis.resume();}catch{} playing=true; document.getElementById('ttsPlay').textContent='⏸'; startKeepAlive(); } else play(); } });
 document.getElementById('ttsStop').addEventListener('click', stop);
 document.getElementById('ttsPrev').addEventListener('click', ()=>{ if(idx>0){ idx--; highlight(idx); } });
 document.getElementById('ttsNext').addEventListener('click', ()=>{ if(idx<sentences.length-1){ idx++; highlight(idx); } });
-document.getElementById('btnBack').addEventListener('click', ()=>{
-  stop();
-  document.getElementById('readerView').style.display='none';
-  document.getElementById('libraryView').style.display='block';
-  document.getElementById('ttsControls').style.display='none';
-  document.getElementById('fileInput').value='';
-});
-
-// Drag & Drop
-const dz=document.querySelector('.dropzone');
-dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.style.borderColor='#a16b3f'; });
-dz.addEventListener('dragleave', e=>{ dz.style.borderColor='#c9b8a0'; });
-dz.addEventListener('drop', e=>{
-  e.preventDefault();
-  dz.style.borderColor='#c9b8a0';
-  handleFiles(e.dataTransfer.files);
-});
-
+document.getElementById('btnBack').addEventListener('click', ()=>{ stop(); document.getElementById('readerView').style.display='none'; document.getElementById('libraryView').style.display='block'; document.getElementById('ttsControls').style.display='none'; document.getElementById('fileInput').value=''; });
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden'){ if(audioCtx) audioCtx.resume(); if(keepAudio) keepAudio.play().catch(()=>{}); } else { if(audioCtx) audioCtx.resume(); } });
 log('준비 완료 - 파일을 선택하거나 샘플 책을 열어보세요');
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}</script>
-</body>
-</html>
+</body></html>
