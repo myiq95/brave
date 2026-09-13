@@ -1,1 +1,1 @@
-const BraveTTS={speak:()=>Promise.resolve(), stop:()=>{}, pause:()=>{}, resume:()=>{}};
+// dummy
